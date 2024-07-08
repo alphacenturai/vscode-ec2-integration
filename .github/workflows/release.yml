@@ -1,48 +1,75 @@
-name: Release
+name: Auto Increment Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release version (optional)"
+        required: false
+        default: ""
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: 1.22.5
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.22.5"
 
-    - name: Build
-      run: |
-        go build -o ssm-proxy-go ./...
+      - name: Get latest release tag
+        id: fetch_tag
+        run: |
+          if [ -z "${{ github.event.inputs.release_version }}" ]; then
+            LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+            echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          else
+            echo "LATEST_TAG=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
 
-    - name: Create release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          Changes in this release:
-          - Feature 1
-          - Feature 2
-        draft: false
-        prerelease: false
+      - name: Increment version
+        id: increment_version
+        run: |
+          if [ -z "${{ github.event.inputs.release_version }}" ]; then
+            if [ -z "${LATEST_TAG}" ]; then
+              NEW_VERSION="v1.0.0"
+            else
+              VERSION=${LATEST_TAG#v}
+              IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
+              MAJOR=${VERSION_PARTS[0]}
+              MINOR=${VERSION_PARTS[1]}
+              PATCH=${VERSION_PARTS[2]}
+              PATCH=$((PATCH + 1))
+              NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
+            fi
+          else
+            NEW_VERSION=${{ github.event.inputs.release_version }}
+          fi
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ssm-proxy-go
-        asset_name: ssm-proxy-go
-        asset_content_type: application/octet-stream
+      - name: Build
+        run: go build -o ssm-proxy-go
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.NEW_VERSION }}
+          release_name: Release ${{ env.NEW_VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ssm-proxy-go
+          asset_name: ssm-proxy-go
+          asset_content_type: application/octet-stream
