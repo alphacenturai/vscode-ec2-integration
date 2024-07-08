@@ -25,7 +25,7 @@ jobs:
         id: fetch_tag
         run: |
           if [ -z "${{ github.event.inputs.release_version }}" ]; then
-            LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+            LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null || echo "v0.0.0")
             echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
           else
             echo "LATEST_TAG=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
@@ -34,21 +34,27 @@ jobs:
         id: increment_version
         run: |
           if [ -z "${{ github.event.inputs.release_version }}" ]; then
-            if [ -z "${LATEST_TAG}" ]; then
-              NEW_VERSION="v1.0.0"
-            else
-              VERSION=${LATEST_TAG#v}
-              IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
-              MAJOR=${VERSION_PARTS[0]}
-              MINOR=${VERSION_PARTS[1]}
-              PATCH=${VERSION_PARTS[2]}
-              PATCH=$((PATCH + 1))
-              NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
-            fi
+            VERSION=${LATEST_TAG#v}
+            IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
+            MAJOR=${VERSION_PARTS[0]}
+            MINOR=${VERSION_PARTS[1]}
+            PATCH=${VERSION_PARTS[2]}
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
           else
             NEW_VERSION=${{ github.event.inputs.release_version }}
           fi
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Set up Git user
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Create new tag
+        run: |
+          git tag ${{ env.NEW_VERSION }}
+          git push origin ${{ env.NEW_VERSION }}
 
       - name: Build
         run: go build -o ssm-proxy-go
