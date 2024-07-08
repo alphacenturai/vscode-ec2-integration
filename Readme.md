@@ -46,6 +46,10 @@ Host graviton-ide
 
 5. The Secret Sauce: Place the `ssh-proxy-go` executable in a directory that's in your system's PATH (e.g., /usr/local/bin on macOS/Linux). or in `.ssh` folder
 
+```
+wget -O ~/.ssm/ssm-proxy-go https://github.com/alphacenturai/vscode-ec2-integration/releases/download/v1.1.0/ssm-proxy-go && chmod +x ~/.ssm/ssm-proxy-go
+```
+
 6. The Final Leap: Connect VS Code to your cloud instance and watch the magic happen! 🎩✨
 
 ## 🕹️ What This Bad Boy Does
