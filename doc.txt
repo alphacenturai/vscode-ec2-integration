@@ -1,0 +1,17 @@
+Package main provides functionality to create and manage AWS EC2 instances for
+development purposes, including automated setup and SSH access.
+
+TYPES
+
+type Config struct {
+	InstanceName     string
+	Port             string
+	AwsProfile       string
+	AwsRegion        string
+	InstanceType     string
+	VpcName          string
+	SshPublicKeyPath string
+	ManagedPolicyArn string // Optional, can be an empty string if not provided
+}
+    Config holds the configuration for the EC2 instance setup.
+
