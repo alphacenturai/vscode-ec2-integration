@@ -57,8 +57,16 @@ jobs:
           git tag ${{ env.NEW_VERSION }}
           git push origin ${{ env.NEW_VERSION }}
 
-      - name: Build
-        run: go build -o ssm-proxy-go
+      - name: Build all binaries
+        run: |
+          mkdir -p dist
+          GOARCH=amd64 GOOS=linux go build -o dist/ssm-proxy-go-linux-amd64
+          GOARCH=amd64 GOOS=darwin go build -o dist/ssm-proxy-go-darwin-amd64
+          GOARCH=amd64 GOOS=windows go build -o dist/ssm-proxy-go-windows-amd64.exe
+          GOARCH=arm64 GOOS=linux go build -o dist/ssm-proxy-go-linux-arm64
+          GOARCH=arm64 GOOS=darwin go build -o dist/ssm-proxy-go-darwin-arm64
+          GOARCH=386 GOOS=linux go build -o dist/ssm-proxy-go-linux-386
+          GOARCH=386 GOOS=windows go build -o dist/ssm-proxy-go-windows-386.exe
 
       - name: Create release
         id: create_release
@@ -71,12 +79,19 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Asset
+      - name: Upload all binaries
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ssm-proxy-go
-          asset_name: ssm-proxy-go
+          asset_path: ./dist/
+          asset_name: |
+            ssm-proxy-go-linux-amd64
+            ssm-proxy-go-darwin-amd64
+            ssm-proxy-go-windows-amd64.exe
+            ssm-proxy-go-linux-arm64
+            ssm-proxy-go-darwin-arm64
+            ssm-proxy-go-linux-386
+            ssm-proxy-go-windows-386.exe
           asset_content_type: application/octet-stream
