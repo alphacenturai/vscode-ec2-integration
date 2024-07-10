@@ -79,19 +79,72 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload all binaries
+      - name: Upload Linux AMD64 binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/
-          asset_name: |
-            ssm-proxy-go-linux-amd64
-            ssm-proxy-go-darwin-amd64
-            ssm-proxy-go-windows-amd64.exe
-            ssm-proxy-go-linux-arm64
-            ssm-proxy-go-darwin-arm64
-            ssm-proxy-go-linux-386
-            ssm-proxy-go-windows-386.exe
+          asset_path: ./dist/ssm-proxy-go-linux-amd64
+          asset_name: ssm-proxy-go-linux-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Darwin AMD64 binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/ssm-proxy-go-darwin-amd64
+          asset_name: ssm-proxy-go-darwin-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Windows AMD64 binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/ssm-proxy-go-windows-amd64.exe
+          asset_name: ssm-proxy-go-windows-amd64.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload Linux ARM64 binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/ssm-proxy-go-linux-arm64
+          asset_name: ssm-proxy-go-linux-arm64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Darwin ARM64 binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/ssm-proxy-go-darwin-arm64
+          asset_name: ssm-proxy-go-darwin-arm64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Linux 386 binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/ssm-proxy-go-linux-386
+          asset_name: ssm-proxy-go-linux-386
+          asset_content_type: application/octet-stream
+
+      - name: Upload Windows 386 binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/ssm-proxy-go-windows-386.exe
+          asset_name: ssm-proxy-go-windows-386.exe
           asset_content_type: application/octet-stream
