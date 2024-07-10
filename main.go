@@ -1,5 +1,3 @@
-// Package main provides functionality to create and manage AWS EC2 instances
-// for development purposes, including automated setup and SSH access.
 package main
 
 import (
@@ -32,7 +30,6 @@ const (
 	defaultTimeout = 60
 )
 
-// Config holds the configuration for the EC2 instance setup.
 type Config struct {
 	InstanceName     string
 	Port             string
@@ -44,8 +41,6 @@ type Config struct {
 	ManagedPolicyArn string // Optional, can be an empty string if not provided
 }
 
-// main is the entry point of the application. It parses command-line arguments,
-// sets up AWS services, and orchestrates the creation and management of the EC2 instance.
 func main() {
 
 	var showHelp bool
@@ -155,8 +150,7 @@ func main() {
 	startSSMSession(ctx, ssmClient, instanceID, appConfig.Port)
 }
 
-// getArgumentOrFlagValue parses and validates command-line arguments,
-// returning a Config struct with the parsed values.
+// getArgumentOrFlagValue returns the value from flag or args based on priority
 func getArgumentOrFlagValue(flagValue, argValue, flagName string) string {
 	if flagValue != "" {
 		return flagValue
@@ -176,7 +170,6 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
-// createOrUpdateInstanceRole creates or updates the IAM role for the EC2 instance.
 func createOrUpdateInstanceRole(ctx context.Context, iamClient *iam.Client, appConfig Config) {
 	roleName := fmt.Sprintf("%s-Role", appConfig.InstanceName)
 	_, err := iamClient.GetRole(ctx, &iam.GetRoleInput{RoleName: &roleName})
@@ -215,11 +208,19 @@ func createOrUpdateInstanceRole(ctx context.Context, iamClient *iam.Client, appC
 		_, err = iamClient.GetInstanceProfile(ctx, &iam.GetInstanceProfileInput{InstanceProfileName: &roleName})
 		if err != nil {
 			fmt.Printf("Creating IAM instance profile: %s\n", roleName)
-			_, err = iamClient.CreateInstanceProfile(ctx, &iam.CreateInstanceProfileInput{
+			instanceProfile, err := iamClient.CreateInstanceProfile(ctx, &iam.CreateInstanceProfileInput{
 				InstanceProfileName: &roleName,
 			})
 			if err != nil {
 				log.Fatalf("Failed to create IAM instance profile: %v", err)
+			}
+
+			_, err = iamClient.AddRoleToInstanceProfile(context.TODO(), &iam.AddRoleToInstanceProfileInput{
+				InstanceProfileName: instanceProfile.InstanceProfile.InstanceProfileName,
+				RoleName:            aws.String(roleName),
+			})
+			if err != nil {
+				log.Fatalf("Failed to attach IAM instance profile: %v", err)
 			}
 		} else {
 			fmt.Printf("IAM instance profile %s already exists\n", roleName)
@@ -231,7 +232,6 @@ func createOrUpdateInstanceRole(ctx context.Context, iamClient *iam.Client, appC
 	}
 }
 
-// getLatestAmiID retrieves the latest Ubuntu AMI ID for ARM64 architecture.
 func getLatestAmiID(ctx context.Context, ec2Client *ec2.Client) string {
 	ownerID := "099720109477" // Canonical's AWS account ID
 	nameFilter := "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-arm64-server-*"
@@ -272,7 +272,6 @@ func getLatestAmiID(ctx context.Context, ec2Client *ec2.Client) string {
 	return *latestImage.ImageId
 }
 
-// getVpcID retrieves the VPC ID based on the provided VPC name or uses the default VPC.
 func getVpcID(ctx context.Context, ec2Client *ec2.Client, vpcName string) string {
 	var vpcID string
 	if vpcName == "" {
@@ -306,7 +305,6 @@ func getVpcID(ctx context.Context, ec2Client *ec2.Client, vpcName string) string
 	return vpcID
 }
 
-// getSubnetID retrieves a subnet ID within the specified VPC.
 func getSubnetID(ctx context.Context, ec2Client *ec2.Client, vpcID string) string {
 	resp, err := ec2Client.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
 		Filters: []types.Filter{
@@ -322,7 +320,6 @@ func getSubnetID(ctx context.Context, ec2Client *ec2.Client, vpcID string) strin
 	return *resp.Subnets[0].SubnetId
 }
 
-// getLaptopIP retrieves the public IP address of the machine running this script.
 func getLaptopIP() string {
 	resp, err := http.Get("https://api.ipify.org")
 	if err != nil {
@@ -336,7 +333,6 @@ func getLaptopIP() string {
 	return string(ip)
 }
 
-// createOrUpdateSecurityGroup creates or updates the security group for the EC2 instance.
 func createOrUpdateSecurityGroup(ctx context.Context, ec2Client *ec2.Client, instanceName, vpcID, laptopIP string) string {
 	sgName := fmt.Sprintf("%s-SG", instanceName)
 	resp, err := ec2Client.DescribeSecurityGroups(ctx, &ec2.DescribeSecurityGroupsInput{
@@ -378,7 +374,6 @@ func createOrUpdateSecurityGroup(ctx context.Context, ec2Client *ec2.Client, ins
 	return sgID
 }
 
-// createUserData generates the user data script for EC2 instance initialization.
 func createUserData(sshPublicKey string) string {
 	userData := `#!/bin/bash
 set -e
@@ -454,7 +449,6 @@ chown ubuntu:ubuntu /home/ubuntu/.auto-shutdown/vscode_test.sh
 	return base64.StdEncoding.EncodeToString([]byte(userData))
 }
 
-// findOrCreateInstance finds an existing EC2 instance or creates a new one if not found.
 func findOrCreateInstance(ctx context.Context, ec2Client *ec2.Client, appConfig Config, amiID, subnetID, sgID, userData string) string {
 	resp, err := ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
 		Filters: []types.Filter{
@@ -538,7 +532,6 @@ func findOrCreateInstance(ctx context.Context, ec2Client *ec2.Client, appConfig 
 	return instanceID
 }
 
-// waitForInstanceOnline waits for the EC2 instance to become available via SSM.
 func waitForInstanceOnline(ctx context.Context, ssmClient *ssm.Client, instanceID string) {
 	for i := 0; i < maxIteration; i++ {
 		resp, err := ssmClient.DescribeInstanceInformation(ctx, &ssm.DescribeInstanceInformationInput{
@@ -566,7 +559,6 @@ func waitForInstanceOnline(ctx context.Context, ssmClient *ssm.Client, instanceI
 	}
 }
 
-// startSSMSession starts an SSM session to the EC2 instance.
 func startSSMSession(ctx context.Context, ssmClient *ssm.Client, instanceID, port string) {
 	input := &ssm.StartSessionInput{
 		Target:       aws.String(instanceID),
@@ -616,14 +608,12 @@ func startSSMSession(ctx context.Context, ssmClient *ssm.Client, instanceID, por
 	}
 }
 
-// isTargetNotConnectedError checks if the error indicates that the target is not connected.
 func isTargetNotConnectedError(err error) bool {
 	// Check if the error is of type aws.Error and if the Code matches TargetNotConnected
 	var targetNotConnectedError *ssmTypes.TargetNotConnected
 	return errors.As(err, &targetNotConnectedError)
 }
 
-// showProgress displays a progress bar for the given duration.
 func showProgress(duration int) {
 	for i := duration; i > 0; i-- {
 		fmt.Printf("\rInitialization Progress: [%-50s] %02d:%02d:%02d",
