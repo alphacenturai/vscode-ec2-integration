@@ -118,7 +118,7 @@ func main() {
 
 	createOrUpdateInstanceRole(ctx, iamClient, appConfig)
 
-	amiID := getLatestAmiID(ctx, ec2Client)
+	amiID := getLatestAmiID(ctx, ec2Client, appConfig.instanceType)
 	vpcID := getVpcID(ctx, ec2Client, appConfig.VpcName)
 	subnetID := getSubnetID(ctx, ec2Client, vpcID)
 
@@ -232,7 +232,7 @@ func createOrUpdateInstanceRole(ctx context.Context, iamClient *iam.Client, appC
 	}
 }
 
-func getLatestAmiID(ctx context.Context, ec2Client *ec2.Client) string {
+func getLatestAmiID(ctx context.Context, ec2Client *ec2.Client, instanceType string) string {
 	ownerID := "099720109477" // Canonical's AWS account ID
 
 	// Determine architecture based on instance type
