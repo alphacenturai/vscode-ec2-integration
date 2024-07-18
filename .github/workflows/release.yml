@@ -60,6 +60,7 @@ jobs:
       - name: Build all binaries
         run: |
           mkdir -p dist
+          go mod tidy
           GOARCH=amd64 GOOS=linux go build -o dist/ssm-proxy-go-linux-amd64
           GOARCH=amd64 GOOS=darwin go build -o dist/ssm-proxy-go-darwin-amd64
           GOARCH=amd64 GOOS=windows go build -o dist/ssm-proxy-go-windows-amd64.exe
