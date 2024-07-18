@@ -118,7 +118,7 @@ func main() {
 
 	createOrUpdateInstanceRole(ctx, iamClient, appConfig)
 
-	amiID := getLatestAmiID(ctx, ec2Client, appConfig.instanceType)
+	amiID := getLatestAmiID(ctx, ec2Client, appConfig.InstanceType)
 	vpcID := getVpcID(ctx, ec2Client, appConfig.VpcName)
 	subnetID := getSubnetID(ctx, ec2Client, vpcID)
 
