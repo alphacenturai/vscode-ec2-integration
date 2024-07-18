@@ -1,13 +1,13 @@
-# Supercharge Your VS Code: Harness the Power of EC2 Graviton in the Cloud
+# Supercharge Your VS Code: Harness the Power of EC2 in the Cloud
 
-Hey there, code warriors! 👩‍💻👨‍💻 Tired of your local machine wheezing under the weight of your epic projects? Let's take your Visual Studio Code setup to the cloud with Amazon EC2 Graviton instances. Buckle up for a turbo boost to your development workflow!
+Hey there, code warriors! 👩‍💻👨‍💻 Tired of your local machine wheezing under the weight of your epic projects? Let's take your Visual Studio Code setup to the cloud with Amazon EC2 AMD/Intel/Graviton instances. Buckle up for a turbo boost to your development workflow!
 This solution is greatly inspired by AWS's blog post on using Cloud9 with VS Code. We've repurposed and enhanced the approach to use EC2 instead of Cloud9, while injecting a bit of automation. 😉
 
 ## 💡 Solution Overview: Your IDE on Steroids
 
 This setup is like giving your VS Code a dose of super-soldier serum:
 
-💪 Flex with EC2 Graviton's ARM-based muscle
+💪 Flex with EC2 muscle
 🌐 Code from anywhere (yes, even that cool coffee shop)
 💰 Keep your wallet happy with Graviton's cost-efficiency
 🔒 Fort Knox-level security without the hassle of open ports
@@ -21,7 +21,7 @@ Before we dive into the code, make sure you've got:
 3. AWS CLI configured and ready to roll
 4. An SSH client that plays nice with OpenSSH
 5. Your personal SSH key pair (your digital ID badge)
-6. The `ssh-proxy-go` executable (our secret weapon, more on this later)
+6. The `ssm-proxy-go` executable (our secret weapon, more on this later)
 
 ## 🏗️ Let's Build This Thing
 
@@ -31,39 +31,45 @@ Before we dive into the code, make sure you've got:
 
 ```bash
 cd ~/.ssh
-ssh-keygen -b 4096 -C 'vscode-remote-ssh' -t rsa -f id_rsa-graviton-ide
+ssh-keygen -b 4096 -C 'vscode-remote-ssh' -t rsa -f id_rsa-ide
 ```
 
 4. Config Magic: Set up your SSH config (~/.ssh/config) like a boss:
 
 ```bash
-Host graviton-ide
-    IdentityFile ~/.ssh/id_rsa-graviton-ide
+Host ide
+    IdentityFile ~/.ssh/id_rsa-ide
     User ubuntu
-    HostName graviton-vscode-host
-    ProxyCommand sh -c "~/.ssh/ssh-proxy-go %h 22 myprofile ap-south-1 m7g.xlarge my-vpc ~/.ssh/id_rsa-graviton-ide.pub"
+    HostName vscode-host
+    ProxyCommand sh -c "~/.ssh/ssm-proxy-go %h 22 myprofile ap-south-1 m7g.xlarge my-vpc ~/.ssh/id_rsa-ide.pub"
+
+Host ide-x86
+    IdentityFile ~/.ssh/id_rsa-ide
+    User ubuntu
+    HostName vscode-host
+    ProxyCommand sh -c "~/.ssh/ssm-proxy-go %h 22 myprofile ap-south-1 m5.xlarge my-vpc ~/.ssh/id_rsa-ide.pub"
 ```
 
-5. The Secret Sauce: Place the `ssh-proxy-go` executable in a directory that's in your system's PATH (e.g., /usr/local/bin on macOS/Linux). or in `.ssh` folder
+5. The Secret Sauce: Place the `ssm-proxy-go` executable in a directory that's in your system's PATH (e.g., /usr/local/bin on macOS/Linux). or in `.ssh` folder
 
 ```
-wget -O ~/.ssm/ssm-proxy-go https://github.com/alphacenturai/vscode-ec2-integration/releases/download/v1.2.0/ssm-proxy-go && chmod +x ~/.ssm/ssm-proxy-go
+wget -O ~/.ssh/ssm-proxy-go https://github.com/alphacenturai/vscode-ec2-integration/releases/download/v2.0.0/ssm-proxy-go && chmod +x ~/.ssh/ssm-proxy-go
 ```
 
 6. The Final Leap: Connect VS Code to your cloud instance and watch the magic happen! 🎩✨
 
 ## 🕹️ What This Bad Boy Does
 
-1. 🕵️ Plays detective, checking if your Graviton instance exists
+1. 🕵️ Plays detective, checking if your instance exists
 2. 🎭 Sets the stage with IAM roles and security groups
-3. 🚀 Launches your EC2 Graviton instance into the cloud
+3. 🚀 Launches your EC2 instance into the cloud
 4. 🛠️ Installs the cool kids (necessary software) and rolls out the red carpet (SSH access)
 5. 🔄 Manages your instance's lifecycle like a helicopter parent
 6. 🔐 Establishes connections so secure, they'd make a spy jealous
 
 ## 🧠 For the Nerds: Technical Deep Dive
 
-The `ssh-proxy-go` program is written in Go and leverages the AWS SDK for Go to automate the process of setting up and connecting to an Amazon EC2 Graviton instance. Here's a detailed breakdown of its structure and functionality:
+The `ssm-proxy-go` program is written in Go and leverages the AWS SDK for Go to automate the process of setting up and connecting to an Amazon EC2 Graviton instance. Here's a detailed breakdown of its structure and functionality:
 
 ### Main Package and Imports
 
