@@ -52,8 +52,8 @@ Host ide-x86
 
 5. The Secret Sauce: Place the `ssm-proxy-go` executable in a directory that's in your system's PATH (e.g., /usr/local/bin on macOS/Linux). or in `.ssh` folder
 
-```
-wget -O ~/.ssh/ssm-proxy-go https://github.com/alphacenturai/vscode-ec2-integration/releases/download/v2.0.0/ssm-proxy-go && chmod +x ~/.ssh/ssm-proxy-go
+```bash
+OS=$(uname | tr '[:upper:]' '[:lower:]'); ARCH=$(uname -m); ARCH=${ARCH/x86_64/amd64}; ARCH=${ARCH/aarch64/arm64}; ARCH=${ARCH/i386/386}; VERSION=$(curl -s https://api.github.com/repos/alphacenturai/vscode-ec2-integration/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/'); wget -O ~/.ssh/ssm-proxy-go "https://github.com/alphacenturai/vscode-ec2-integration/releases/download/${VERSION}/ssm-proxy-go-${OS}-${ARCH}" && chmod +x ~/.ssh/ssm-proxy-go
 ```
 
 6. The Final Leap: Connect VS Code to your cloud instance and watch the magic happen! 🎩✨
