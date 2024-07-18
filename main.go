@@ -234,7 +234,21 @@ func createOrUpdateInstanceRole(ctx context.Context, iamClient *iam.Client, appC
 
 func getLatestAmiID(ctx context.Context, ec2Client *ec2.Client) string {
 	ownerID := "099720109477" // Canonical's AWS account ID
-	nameFilter := "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-arm64-server-*"
+
+	// Determine architecture based on instance type
+	var architecture string
+	if strings.HasPrefix(instanceType, "a1") || strings.HasPrefix(instanceType, "t4g") ||
+		strings.HasPrefix(instanceType, "c6g") || strings.HasPrefix(instanceType, "m6g") ||
+		strings.HasPrefix(instanceType, "r6g") || strings.HasPrefix(instanceType, "c7g") ||
+		strings.HasPrefix(instanceType, "m7g") || strings.HasPrefix(instanceType, "r7g") {
+		architecture = "arm64"
+	} else {
+		architecture = "amd64" // Covers both Intel and AMD
+	}
+
+	// Define name filters for Ubuntu 20.04 LTS
+	nameFilter := fmt.Sprintf("ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-%s-server-*", architecture)
+
 	resp, err := ec2Client.DescribeImages(ctx, &ec2.DescribeImagesInput{
 		Owners: []string{ownerID},
 		Filters: []types.Filter{
