@@ -1,4 +1,4 @@
-name: Auto Increment Release
+name: Auto Increment & Release
 
 on:
   workflow_dispatch:
