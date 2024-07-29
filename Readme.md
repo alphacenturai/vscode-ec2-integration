@@ -1,5 +1,7 @@
 # Supercharge Your VS Code: Harness the Power of EC2 in the Cloud
 
+![Build Status](https://github.com/alphacenturai/vscode-ec2-integration/actions/workflows/release.yml/badge.svg)
+
 Hey there, code warriors! 👩‍💻👨‍💻 Tired of your local machine wheezing under the weight of your epic projects? Let's take your Visual Studio Code setup to the cloud with Amazon EC2 AMD/Intel/Graviton instances. Buckle up for a turbo boost to your development workflow!
 This solution is greatly inspired by AWS's blog post on using Cloud9 with VS Code. We've repurposed and enhanced the approach to use EC2 instead of Cloud9, while injecting a bit of automation. 😉
 
