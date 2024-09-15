@@ -522,6 +522,19 @@ func findOrCreateInstance(ctx context.Context, ec2Client *ec2.Client, appConfig 
 		fmt.Printf("Created instance with ID: %s\n", instanceID)
 	} else {
 		instanceID = *resp.Reservations[0].Instances[0].InstanceId
+		instanceState := *resp.Reservations[0].Instances[0].State.Name
+
+		if instanceState == types.InstanceStateNameStopped {
+			fmt.Printf("Instance %s is stopped. Starting it...\n", instanceID)
+			_, err = ec2Client.StartInstances(ctx, &ec2.StartInstancesInput{
+				InstanceIds: []string{instanceID},
+			})
+			if err != nil {
+				log.Fatalf("Failed to start the instance: %v", err)
+			}
+			fmt.Println("Waiting for the instance to start...")
+			showProgress(defaultTimeout) // Wait until the instance is fully started
+		}
 	}
 
 	instanceStatus, err := ec2Client.DescribeInstanceStatus(ctx, &ec2.DescribeInstanceStatusInput{
@@ -545,6 +558,7 @@ func findOrCreateInstance(ctx context.Context, ec2Client *ec2.Client, appConfig 
 
 	return instanceID
 }
+
 
 func waitForInstanceOnline(ctx context.Context, ssmClient *ssm.Client, instanceID string) {
 	for i := 0; i < maxIteration; i++ {
